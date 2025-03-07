@@ -2,10 +2,14 @@ from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 import database, models, schemas, crud
 import json
+import database
 
 app = FastAPI()
 
 # Initialize the database
+print("🔄 Initializing database...")
+database.init_db()  # ✅ Ensure database is initialized
+print("✅ Database initialized with tables!")
 # models.Base.metadata.create_all(bind=database.engine)
 
 # WebSocket connections storage
