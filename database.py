@@ -18,6 +18,7 @@ def get_db():
 
 # Create the tables in the database
 def init_db():
+    print("🔄 Initializing database...")
     Base.metadata.create_all(bind=engine)
     print("✅ Database initialized with tables!")
 
