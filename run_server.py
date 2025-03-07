@@ -1,7 +1,7 @@
 import uvicorn
 import database
 import uvicorn
-import database  # Ensure database is initialized before starting the server
+from main import app
 
 # ✅ Initialize database before running the server
 database.init_db()
