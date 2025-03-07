@@ -10,7 +10,7 @@ class SensorData(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     sensor_id = Column(Integer, nullable=False)
-    point_id = Column(Integer, nullable=False)  # Add this line
+    point_id = Column(Integer, nullable=False) 
     depth = Column(Float, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 

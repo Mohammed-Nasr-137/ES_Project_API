@@ -6,6 +6,7 @@ from datetime import datetime
 def create_sensor_data(db: Session, data: schemas.SensorDataCreate):
     db_data = models.SensorData(
         sensor_id=data.sensor_id,
+        point_id=data.point_id,
         depth=data.depth,
         timestamp=data.timestamp or datetime.utcnow()
     )

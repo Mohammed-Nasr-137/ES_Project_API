@@ -95,6 +95,7 @@ def create_sensor_data(data: schemas.SensorDataCreate, db: Session = Depends(dat
             import asyncio
             asyncio.create_task(connection.send_json({
                 "sensor_id": db_data.sensor_id,
+                "point_id": db_data.point_id,
                 "depth": db_data.depth,
                 "timestamp": db_data.timestamp.isoformat()
             }))
