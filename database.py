@@ -5,7 +5,7 @@ from models import Base
 DATABASE_URL = "postgresql://neondb_owner:npg_iso3LamnjO7k@ep-raspy-union-a8p6zewc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"
 # DATABASE_URL = "sqlite:///sensor_data.db"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
