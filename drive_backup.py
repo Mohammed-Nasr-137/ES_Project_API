@@ -1,54 +1,35 @@
 import os
-from fastapi import FastAPI, UploadFile, HTTPException
+import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-# Load Service Account JSON Key
-SERVICE_ACCOUNT_FILE = "sonorous-saga-428116-n4-5057c666a671.json"  # Replace with your actual JSON file
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+# Path to your service account JSON file
+SERVICE_ACCOUNT_FILE = "service-account.json"
 
+# Define Google Drive folder ID where backups will be stored (Optional: Use root if not needed)
+DRIVE_FOLDER_ID = "your_google_drive_folder_id_here"  # Replace with your folder ID (or leave None for root)
+
+# Authenticate Google Drive API
 creds = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    SERVICE_ACCOUNT_FILE,
+    scopes=["https://www.googleapis.com/auth/drive.file"]
 )
 
-# Initialize Google Drive API
-drive_service = build("drive", "v3", credentials=creds)
+service = build("drive", "v3", credentials=creds)
 
-# Define Google Drive Folder ID where backups will be stored
-FOLDER_ID = "1uKkh8Ggfi4L8MNNS7sXPiTT5RrgQcUKD"  # Replace with your Google Drive folder ID
+# Backup file path
+backup_file = "backup/database_backup.sqlite"
 
-# Initialize FastAPI
-app = FastAPI()
+# Upload file to Google Drive
+file_metadata = {
+    "name": os.path.basename(backup_file),
+    "mimeType": "application/x-sqlite3",
+}
+if DRIVE_FOLDER_ID:
+    file_metadata["parents"] = [DRIVE_FOLDER_ID]
 
-def upload_to_drive(file_path: str, file_name: str):
-    """Uploads a file to Google Drive in the specified folder."""
-    try:
-        file_metadata = {
-            "name": file_name,
-            "parents": [FOLDER_ID]  # Store inside the designated folder
-        }
-        media = MediaFileUpload(file_path, mimetype="application/octet-stream")
-        file = drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
-        return file.get("id")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Google Drive upload failed: {e}")
+media = MediaFileUpload(backup_file, mimetype="application/x-sqlite3")
+file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
 
-@app.post("/backup")
-async def backup_db(file: UploadFile):
-    """Endpoint to upload database backup to Google Drive."""
-    try:
-        # Save uploaded file temporarily
-        file_path = f"temp_{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
-
-        # Upload to Google Drive
-        file_id = upload_to_drive(file_path, file.filename)
-
-        # Remove temporary file
-        os.remove(file_path)
-
-        return {"message": "Backup uploaded successfully", "file_id": file_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+print(f"Backup uploaded successfully! File ID: {file.get('id')}")
