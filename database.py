@@ -2,7 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Base
 
-DATABASE_URL = "postgresql://neondb_owner:npg_iso3LamnjO7k@ep-raspy-union-a8p6zewc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"
+DATABASE_URL = "postgresql://neondb_owner:npg_iso3LamnjO7k@ep-raspy-union-a8p6zewc-pooler.eastus2.azure.neon.tech/ES_db?sslmode=require"
+# DATABASE_URL = "postgresql://neondb_owner:npg_iso3LamnjO7k@ep-raspy-union-a8p6zewc-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"
 # DATABASE_URL = "sqlite:///sensor_data.db"
 
 engine = create_engine(DATABASE_URL)
