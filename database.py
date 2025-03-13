@@ -20,8 +20,12 @@ def get_db():
 # Create the tables in the database
 def init_db():
     print("🔄 Initializing database...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database initialized with tables!")
+    if not engine.dialect.has_table(engine.connect(), "sensor_data"):
+        Base.metadata.create_all(bind=engine)  # ✅ Prevents re-running if table exists
+        print("✅ Database initialized with tables!")
+    else:
+        print("⚠️ Database already initialized. Skipping...")
+
 
 # if __name__ == "__main__":
 #     init_db()
