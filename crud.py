@@ -13,7 +13,7 @@ def create_sensor_data(db: Session, data: schemas.SensorDataCreate):
     db.add(db_data)
     db.commit()
     db.close()
-    # db.refresh(db_data)
+    db.refresh(db_data)
     return db_data
 
 # Function to retrieve sensor data with an optional limit
