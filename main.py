@@ -7,9 +7,9 @@ import database
 app = FastAPI()
 
 # Initialize the database
-print("🔄 Initializing database...")
-database.init_db()  # ✅ Ensure database is initialized
-print("✅ Database initialized with tables!")
+# print("🔄 Initializing database...")
+# database.init_db()  # ✅ Ensure database is initialized
+# print("✅ Database initialized with tables!")
 # models.Base.metadata.create_all(bind=database.engine)
 
 # WebSocket connections storage
