@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import database, models, schemas, crud
 import json
 import database
+import os
 
 app = FastAPI()
 
@@ -11,6 +13,7 @@ app = FastAPI()
 # database.init_db()  # ✅ Ensure database is initialized
 # print("✅ Database initialized with tables!")
 # models.Base.metadata.create_all(bind=database.engine)
+
 
 # WebSocket connections storage
 active_connections = []
@@ -111,6 +114,15 @@ def create_sensor_data(data: schemas.SensorDataCreate, db: Session = Depends(dat
         active_connections.remove(connection)
 
     return db_data
+
+
+DB_PATH = "sensor_data.db"
+@app.get("/download-db")
+def download_db():
+    if os.path.exists(DB_PATH):
+        return FileResponse(DB_PATH, filename="sensor_data.db", media_type="application/octet-stream")
+    return {"error": "Database file not found"}
+
 
 @app.get("/sensor_data/{point_id}", response_model=list[schemas.SensorDataResponse])
 def get_sensor_data(point_id: int, limit: int = 10, db: Session = Depends(database.get_db)):
