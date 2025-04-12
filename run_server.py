@@ -1,6 +1,6 @@
 import uvicorn
 from main import app as fastapi_app
-from app import app as dash_app
+from app import dash_app
 from fastapi.middleware.wsgi import WSGIMiddleware
 import database
 
