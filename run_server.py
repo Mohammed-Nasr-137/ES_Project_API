@@ -1,13 +1,16 @@
 import uvicorn
+from main import app as fastapi_app
+from app import app as dash_app
+from fastapi.middleware.wsgi import WSGIMiddleware
 import database
-import uvicorn
-from main import app
 
-# ✅ Initialize database before running the server
+# Initialize the database
+print("\U0001F504 Initializing database...")
 database.init_db()
+print("\u2705 Database initialized with tables!")
+
+# Mount the Dash app on a subpath (e.g. /dashboard)
+fastapi_app.mount("/dashboard", WSGIMiddleware(dash_app.server))
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)  # Corrected
-    # uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
-
-    # uvicorn.run("main:app", host="192.168.120.88", port=8000, reload=True)
+    uvicorn.run("run_server:fastapi_app", host="0.0.0.0", port=8000, reload=True)
