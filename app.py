@@ -15,7 +15,12 @@ API_URL = "https://shiny-deana-mohammednasr-4c86290b.koyeb.app/sensor_data/1"
 # ---------------------------
 # App Initialization
 # ---------------------------
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+app = dash.Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.DARKLY],
+    requests_pathname_prefix="/dashboard/"
+)
+
 app.title = "Lake Depth Dashboard"
 
 # ---------------------------
