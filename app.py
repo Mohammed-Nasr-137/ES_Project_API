@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Input, Output, State
 import plotly.express as px
 import requests
 import pandas as pd
@@ -143,9 +143,9 @@ def update_graph(range_value, sensor_id, n):
 
 @app.callback(
     Output("download", "data"),
-    [Input("download-btn", "n_clicks"),
-     Input("time-range", "value"),
-     Input("sensor-selector", "value")],
+    Input("download-btn", "n_clicks"),
+    State("time-range", "value"),
+    State("sensor-selector", "value"),
     prevent_initial_call=True
 )
 def download_csv(n_clicks, range_value, sensor_id):
