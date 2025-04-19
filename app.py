@@ -111,7 +111,7 @@ app.layout = dbc.Container([
                 "color": "#0f0",
                 "fontFamily": "monospace"
             }),
-            dcc.Store(id="log-store", data=[])
+            dcc.Store(id="log-store", data=[]),
         ]))
     ], className="my-3"),
 ], fluid=True)
