@@ -9,6 +9,9 @@ def create_sensor_data(db: Session, data: schemas.SensorDataCreate):
         point_id=data.point_id,
         depth=data.depth,
         timestamp=data.timestamp or datetime.utcnow()
+        battery=data.battery,
+        rain=data.rain,
+        max_level=data.max_level
     )
     db.add(db_data)
     db.commit()
