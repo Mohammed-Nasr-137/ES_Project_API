@@ -156,8 +156,8 @@ def update_graph(range_value, sensor_id, n, logs):
     log_line = f"{latest['timestamp']} | Sensor {sensor_id} | Depth: {latest['depth']}cm | Battery: {battery:.0f}% | Rain: {latest.get('rain', False)} | Max: {latest.get('max_level', False)}"
 
     if not logs or logs[-1] != log_line:
-    logs.append(log_line)
-    logs = logs[-100:]  # Keep latest 100 logs
+        logs.append(log_line)
+        logs = logs[-100:]  # Keep latest 100 logs
 
 
     return (
