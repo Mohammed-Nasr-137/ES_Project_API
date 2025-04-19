@@ -8,11 +8,6 @@ import io
 import dash_bootstrap_components as dbc
 
 # ---------------------------
-# Config
-# ---------------------------
-API_URL = "https://shiny-deana-mohammednasr-4c86290b.koyeb.app/sensor_data/1"
-
-# ---------------------------
 # App Initialization
 # ---------------------------
 app = dash.Dash(
@@ -26,8 +21,9 @@ app.title = "Lake Depth Dashboard"
 # ---------------------------
 # Helper Functions
 # ---------------------------
-def fetch_data():
-    response = requests.get(API_URL)
+def fetch_data(sensor_id):
+    url = f"https://shiny-deana-mohammednasr-4c86290b.koyeb.app/sensor_data/{sensor_id}"
+    response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
         df = pd.DataFrame(data)
@@ -54,6 +50,17 @@ app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dcc.Dropdown(
+                id="sensor-selector",
+                options=[
+                    {"label": "Sensor 1", "value": 1},
+                    {"label": "Sensor 2", "value": 2},
+                    {"label": "Sensor 3", "value": 3},
+                ],
+                value=1,
+                clearable=False,
+                className="mb-3"
+            ),
+            dcc.Dropdown(
                 id="time-range",
                 options=[
                     {"label": "Last Day", "value": "day"},
@@ -64,7 +71,7 @@ app.layout = dbc.Container([
                 clearable=False,
                 className="mb-3"
             )
-        ], width=4),
+        ], width=6),
         dbc.Col([
             html.Button("Download Report", id="download-btn", className="btn btn-success mb-3"),
             dcc.Download(id="download")
@@ -87,10 +94,11 @@ app.layout = dbc.Container([
     [Output("depth-graph", "figure"),
      Output("max-depth", "children"),
      Output("min-depth", "children")],
-    Input("time-range", "value")
+    [Input("time-range", "value"),
+     Input("sensor-selector", "value")]
 )
-def update_graph(range_value):
-    df = fetch_data()
+def update_graph(range_value, sensor_id):
+    df = fetch_data(sensor_id)
     if df.empty:
         return px.line(), "No data", "No data"
 
@@ -107,18 +115,12 @@ def update_graph(range_value):
 
 @app.callback(
     Output("download", "data"),
-    Input("download-btn", "n_clicks"),
-    Input("time-range", "value"),
+    [Input("download-btn", "n_clicks"),
+     Input("time-range", "value"),
+     Input("sensor-selector", "value")],
     prevent_initial_call=True
 )
-def download_csv(n_clicks, range_value):
-    df = fetch_data()
+def download_csv(n_clicks, range_value, sensor_id):
+    df = fetch_data(sensor_id)
     df_filtered = filter_data(df, range_value)
     return dcc.send_data_frame(df_filtered.to_csv, "lake_depth_report.csv")
-
-# ---------------------------
-# Run
-# ---------------------------
-# if __name__ == '__main__':
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-#     app.run_server(debug=True)
