@@ -99,7 +99,7 @@ app.layout = dbc.Container([
             value=0,
             color="#00cc96",
             showCurrentValue=True,
-        ))
+        )),
         dbc.Col(html.Div([
     html.H5("Live Data Log", className="text-light"),
     html.Div(id="data-log", style={
