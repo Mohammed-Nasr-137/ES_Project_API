@@ -13,4 +13,6 @@ class SensorData(Base):
     point_id = Column(Integer, nullable=False) 
     depth = Column(Float, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
-
+    battery = Column(Float, nullable=False)
+    rain = Column(Bool, nullable=False)
+    max_level = Column(Bool, nullable=False)
