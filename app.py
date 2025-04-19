@@ -4,7 +4,6 @@ import plotly.express as px
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
-import io
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
@@ -102,7 +101,7 @@ app.layout = dbc.Container([
         )),
         dbc.Col(html.Div([
             html.H5("Live Data Log", className="text-light"),
-            html.Div(id="data-log", style={
+            html.Pre(id="data-log", style={
                 "height": "200px",
                 "overflowY": "scroll",
                 "backgroundColor": "#1e1e1e",
@@ -110,10 +109,12 @@ app.layout = dbc.Container([
                 "border": "1px solid #555",
                 "color": "#0f0",
                 "fontFamily": "monospace"
-            }),
-            dcc.Store(id="log-store", data=[]),
-        ]))
+            })
+        ])),
     ], className="my-3"),
+
+    # Log data stored in browser memory
+    dcc.Store(id="log-store", data=[])
 ], fluid=True)
 
 # ---------------------------
@@ -147,19 +148,19 @@ def update_graph(range_value, sensor_id, n, logs):
     fig.update_layout(xaxis_title="Time", yaxis_title="Depth (cm)")
 
     latest = df_filtered.iloc[-1]
-
     battery = latest.get("battery", 0) or 0
     maxlevel_alert = "⚠️ Lake above max level!" if latest.get("max_level") else ""
     rain_alert = "🌧️ It’s currently raining at this point!" if latest.get("rain") else ""
 
-    # Log line
+    # Logging
+    if not isinstance(logs, list):
+        logs = []
+
     log_line = f"{latest['timestamp']} | Sensor {sensor_id} | Depth: {latest['depth']}cm | Battery: {battery:.0f}% | Rain: {latest.get('rain', False)} | Max: {latest.get('max_level', False)}"
-    logs.append(log_line)
-    #  if not logs or logs[-1] != log_line:
-    
-    #     logs = logs[-100:]  # Keep latest 100 logs
 
-
+    if not logs or logs[-1] != log_line:
+        logs.append(log_line)
+        logs = logs[-100:]  # Keep latest 100 logs
 
     return (
         fig,
@@ -168,7 +169,7 @@ def update_graph(range_value, sensor_id, n, logs):
         battery,
         maxlevel_alert,
         rain_alert,
-        html.Pre("\n".join(logs)),
+        "\n".join(logs),
         logs
     )
 
