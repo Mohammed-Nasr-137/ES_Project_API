@@ -96,7 +96,7 @@ app.layout = dbc.Container([
             label='Battery %',
             min=0,
             max=100,
-            value=50,
+            value=0,
             color="#00cc96",
             showCurrentValue=True,
         ))
