@@ -20,8 +20,6 @@ def create_sensor_data(db: Session, data: schemas.SensorDataCreate):
     return db_data
 
 # Function to retrieve sensor data with an optional limit
-def get_sensor_data(db: Session, sensor_id: int, limit: int = None):
+def get_sensor_data(db: Session, sensor_id: int):
     query = db.query(models.SensorData).filter(models.SensorData.sensor_id == sensor_id)
-    if limit:
-        query = query.limit(limit)
     return query.all()
