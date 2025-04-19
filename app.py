@@ -54,7 +54,6 @@ app.layout = dbc.Container([
                 options=[
                     {"label": "Sensor 1", "value": 1},
                     {"label": "Sensor 2", "value": 2},
-                    {"label": "Sensor 3", "value": 3},
                 ],
                 value=1,
                 clearable=False,
