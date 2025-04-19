@@ -8,9 +8,9 @@ class SensorDataCreate(BaseModel):
     point_id: int
     depth: float
     timestamp: Optional[datetime] = None  # Auto-filled if not provided
-    battery: float
-    rain: bool
-    max_level: bool
+    battery: Optional[int] = None
+    rain: Optional[bool] = None
+    max_level: Optional[bool] = None
 
 # Schema for responses when fetching stored data
 class SensorDataResponse(BaseModel):
