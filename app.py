@@ -6,6 +6,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import io
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
+import dash_daq as daq
 
 # ---------------------------
 # App Initialization
@@ -15,7 +17,6 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.DARKLY],
     requests_pathname_prefix="/dashboard/"
 )
-
 app.title = "Lake Depth Dashboard"
 
 # ---------------------------
@@ -49,6 +50,7 @@ app.layout = dbc.Container([
 
     dbc.Row([
         dbc.Col([
+            html.Label("Select Sensor:", className="text-light"),
             dcc.Dropdown(
                 id="sensor-selector",
                 options=[
@@ -57,8 +59,10 @@ app.layout = dbc.Container([
                 ],
                 value=1,
                 clearable=False,
-                className="mb-3"
+                className="mb-3",
+                style={"color": "black"}
             ),
+            html.Label("Select Time Range:", className="text-light"),
             dcc.Dropdown(
                 id="time-range",
                 options=[
@@ -68,20 +72,34 @@ app.layout = dbc.Container([
                 ],
                 value="week",
                 clearable=False,
-                className="mb-3"
+                className="mb-3",
+                style={"color": "black"}
             )
-        ], width=6),
+        ], width=4),
         dbc.Col([
             html.Button("Download Report", id="download-btn", className="btn btn-success mb-3"),
-            dcc.Download(id="download")
-        ], width=4),
+            dcc.Download(id="download"),
+            html.Div(id="alert-maxlevel", className="text-danger fw-bold"),
+            html.Div(id="alert-rain", className="text-info fw-bold")
+        ], width=6),
     ], justify="center"),
+
+    dcc.Interval(id="interval-update", interval=5000, n_intervals=0),
 
     dcc.Graph(id="depth-graph"),
 
     dbc.Row([
         dbc.Col(html.Div(id="max-depth", className="alert alert-info")),
-        dbc.Col(html.Div(id="min-depth", className="alert alert-warning"))
+        dbc.Col(html.Div(id="min-depth", className="alert alert-warning")),
+        dbc.Col(daq.Gauge(
+            id='battery-gauge',
+            label='Battery %',
+            min=0,
+            max=100,
+            value=50,
+            color="#00cc96",
+            showCurrentValue=True,
+        ))
     ], className="my-3")
 
 ], fluid=True)
@@ -92,24 +110,34 @@ app.layout = dbc.Container([
 @app.callback(
     [Output("depth-graph", "figure"),
      Output("max-depth", "children"),
-     Output("min-depth", "children")],
+     Output("min-depth", "children"),
+     Output("battery-gauge", "value"),
+     Output("alert-maxlevel", "children"),
+     Output("alert-rain", "children")],
     [Input("time-range", "value"),
-     Input("sensor-selector", "value")]
+     Input("sensor-selector", "value"),
+     Input("interval-update", "n_intervals")]
 )
-def update_graph(range_value, sensor_id):
+def update_graph(range_value, sensor_id, n):
     df = fetch_data(sensor_id)
     if df.empty:
-        return px.line(), "No data", "No data"
+        raise PreventUpdate
 
     df_filtered = filter_data(df, range_value)
 
     fig = px.line(df_filtered, x="timestamp", y="depth", title="Water Depth Over Time")
+    fig.update_traces(mode="lines+markers")
     fig.update_layout(xaxis_title="Time", yaxis_title="Depth (cm)")
 
     max_depth = df_filtered["depth"].max()
     min_depth = df_filtered["depth"].min()
 
-    return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm"
+    # Dummy simulated values for demo:
+    battery = 87  # Later fetch from API
+    maxlevel_alert = "⚠️ Lake above max level!" if max_depth > 85 else ""
+    rain_alert = "🌧️ It’s currently raining at this point!" if sensor_id == 2 and df_filtered["depth"].iloc[-1] > 60 else ""
+
+    return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm", battery, maxlevel_alert, rain_alert
 
 
 @app.callback(
@@ -122,4 +150,9 @@ def update_graph(range_value, sensor_id):
 def download_csv(n_clicks, range_value, sensor_id):
     df = fetch_data(sensor_id)
     df_filtered = filter_data(df, range_value)
+    df_filtered["Max Depth"] = df_filtered["depth"].max()
+    df_filtered["Min Depth"] = df_filtered["depth"].min()
+    df_filtered["Battery"] = 87
+    df_filtered["Rain Alert"] = "Yes" if sensor_id == 2 and df_filtered["depth"].iloc[-1] > 60 else "No"
+    df_filtered["Max Level Alert"] = "Yes" if df_filtered["depth"].max() > 85 else "No"
     return dcc.send_data_frame(df_filtered.to_csv, "lake_depth_report.csv")
