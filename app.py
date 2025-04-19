@@ -101,6 +101,18 @@ app.layout = dbc.Container([
             showCurrentValue=True,
         ))
     ], className="my-3")
+    html.Div([
+    html.H5("Live Data Log", className="text-light"),
+    html.Div(id="data-log", style={
+        "height": "200px",
+        "overflowY": "scroll",
+        "backgroundColor": "#1e1e1e",
+        "padding": "10px",
+        "border": "1px solid #555",
+        "color": "#0f0",
+        "fontFamily": "monospace"
+    }),
+], className="my-3"),
 
 ], fluid=True)
 
@@ -113,7 +125,8 @@ app.layout = dbc.Container([
      Output("min-depth", "children"),
      Output("battery-gauge", "value"),
      Output("alert-maxlevel", "children"),
-     Output("alert-rain", "children")],
+     Output("alert-rain", "children"),
+     Output("data-log", "children")],
     [Input("time-range", "value"),
      Input("sensor-selector", "value"),
      Input("interval-update", "n_intervals")]
@@ -137,8 +150,10 @@ def update_graph(range_value, sensor_id, n):
     battery = latest_row["battery"] if pd.notna(latest_row["battery"]) else 0
     maxlevel_alert = "⚠️ Lake above max level!" if latest_row.get("max_level") else ""
     rain_alert = "🌧️ It’s currently raining at this point!" if latest_row.get("rain") else ""
+    latest = df_filtered.iloc[-1]
+    log_entry = f"{latest['timestamp']} | Sensor {latest['sensor_id']} | Depth: {latest['depth']}cm | Battery: {latest.get('battery', '-'):.0f}% | Rain: {latest.get('rain', False)} | Max: {latest.get('max_level', False)}"
 
-    return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm", battery, maxlevel_alert, rain_alert
+    return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm", battery, maxlevel_alert, rain_alert, log_entry
 
 
 @app.callback(
