@@ -156,4 +156,4 @@ def download_csv(n_clicks, range_value, sensor_id):
     df_filtered["Battery"] = df_filtered["battery"].fillna("Unknown")
     df_filtered["Rain Alert"] = df_filtered["rain"].apply(lambda x: "Yes" if x else "No")
     df_filtered["Max Level Alert"] = df_filtered["max_level"].apply(lambda x: "Yes" if x else "No")
-    return dcc.send_data_frame(df_filtered.to_csv, "lake_depth_report.csv")
+    return dcc.send_data_frame(df_filtered.to_csv, f"lake_depth_report_sensor_{sensor_id}.csv")
