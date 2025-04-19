@@ -104,10 +104,10 @@ def create_sensor_data(data: schemas.SensorDataCreate, db: Session = Depends(dat
                 "sensor_id": db_data.sensor_id,
                 "point_id": db_data.point_id,
                 "depth": db_data.depth,
-                "timestamp": db_data.timestamp.isoformat(),
                 "battery": db_data.battery,
                 "rain": db_data.rain,
                 "max_level": db_data.max_level,
+                "timestamp": db_data.timestamp.isoformat(),
             }))
         except WebSocketDisconnect:
             disconnected_clients.append(connection)
