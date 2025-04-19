@@ -128,6 +128,6 @@ def download_db():
 
 
 @app.get("/sensor_data/{point_id}", response_model=list[schemas.SensorDataResponse])
-def get_sensor_data(point_id: int, limit: int = 10, db: Session = Depends(database.get_db)):
-    """Fetches the latest sensor data for a given point"""
+def get_sensor_data(point_id: int, limit: int = None, db: Session = Depends(database.get_db)):
     return crud.get_sensor_data(db, point_id, limit)
+
