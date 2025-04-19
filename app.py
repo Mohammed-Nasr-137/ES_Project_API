@@ -29,6 +29,9 @@ def fetch_data(sensor_id):
         data = response.json()
         df = pd.DataFrame(data)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["battery"] = df.get("battery", pd.Series([None]*len(df)))
+        df["rain"] = df.get("rain", pd.Series([None]*len(df)))
+        df["maxlevel"] = df.get("maxlevel", pd.Series([None]*len(df)))
         return df
     return pd.DataFrame()
 
@@ -132,10 +135,11 @@ def update_graph(range_value, sensor_id, n):
     max_depth = df_filtered["depth"].max()
     min_depth = df_filtered["depth"].min()
 
-    # Dummy simulated values for demo:
-    battery = 87  # Later fetch from API
-    maxlevel_alert = "⚠️ Lake above max level!" if max_depth > 85 else ""
-    rain_alert = "🌧️ It’s currently raining at this point!" if sensor_id == 2 and df_filtered["depth"].iloc[-1] > 60 else ""
+    latest_row = df_filtered.iloc[-1]
+
+    battery = latest_row["battery"] if pd.notna(latest_row["battery"]) else 0
+    maxlevel_alert = "⚠️ Lake above max level!" if latest_row.get("maxlevel") else ""
+    rain_alert = "🌧️ It’s currently raining at this point!" if latest_row.get("rain") else ""
 
     return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm", battery, maxlevel_alert, rain_alert
 
@@ -152,7 +156,7 @@ def download_csv(n_clicks, range_value, sensor_id):
     df_filtered = filter_data(df, range_value)
     df_filtered["Max Depth"] = df_filtered["depth"].max()
     df_filtered["Min Depth"] = df_filtered["depth"].min()
-    df_filtered["Battery"] = 87
-    df_filtered["Rain Alert"] = "Yes" if sensor_id == 2 and df_filtered["depth"].iloc[-1] > 60 else "No"
-    df_filtered["Max Level Alert"] = "Yes" if df_filtered["depth"].max() > 85 else "No"
+    df_filtered["Battery"] = df_filtered["battery"].fillna("Unknown")
+    df_filtered["Rain Alert"] = df_filtered["rain"].apply(lambda x: "Yes" if x else "No")
+    df_filtered["Max Level Alert"] = df_filtered["maxlevel"].apply(lambda x: "Yes" if x else "No")
     return dcc.send_data_frame(df_filtered.to_csv, "lake_depth_report.csv")
