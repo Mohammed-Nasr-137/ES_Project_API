@@ -100,8 +100,7 @@ app.layout = dbc.Container([
             color="#00cc96",
             showCurrentValue=True,
         ))
-    ], className="my-3")
-    html.Div([
+        dbc.Col(html.Div([
     html.H5("Live Data Log", className="text-light"),
     html.Div(id="data-log", style={
         "height": "200px",
@@ -112,7 +111,9 @@ app.layout = dbc.Container([
         "color": "#0f0",
         "fontFamily": "monospace"
     }),
-], className="my-3"),
+], className="my-3")),
+    ], className="my-3"),
+    
 
 ], fluid=True)
 
