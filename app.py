@@ -84,7 +84,7 @@ app.layout = dbc.Container([
         ], width=6),
     ], justify="center"),
 
-    dcc.Interval(id="interval-update", interval=5000, n_intervals=0),
+    dcc.Interval(id="interval-update", interval=3000, n_intervals=0),
 
     dcc.Graph(id="depth-graph"),
 
