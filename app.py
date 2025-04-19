@@ -9,9 +9,6 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
 
-# ---------------------------
-# App Initialization
-# ---------------------------
 app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.DARKLY],
@@ -24,12 +21,15 @@ app.title = "Lake Depth Dashboard"
 # ---------------------------
 def fetch_data(sensor_id):
     url = f"https://shiny-deana-mohammednasr-4c86290b.koyeb.app/sensor_data/{sensor_id}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        df = pd.DataFrame(data)
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        return df
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            df = pd.DataFrame(data)
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
+            return df
+    except:
+        pass
     return pd.DataFrame()
 
 def filter_data(df, range_value):
@@ -101,20 +101,19 @@ app.layout = dbc.Container([
             showCurrentValue=True,
         )),
         dbc.Col(html.Div([
-    html.H5("Live Data Log", className="text-light"),
-    html.Div(id="data-log", style={
-        "height": "200px",
-        "overflowY": "scroll",
-        "backgroundColor": "#1e1e1e",
-        "padding": "10px",
-        "border": "1px solid #555",
-        "color": "#0f0",
-        "fontFamily": "monospace"
-    }),
-], className="my-3")),
+            html.H5("Live Data Log", className="text-light"),
+            html.Div(id="data-log", style={
+                "height": "200px",
+                "overflowY": "scroll",
+                "backgroundColor": "#1e1e1e",
+                "padding": "10px",
+                "border": "1px solid #555",
+                "color": "#0f0",
+                "fontFamily": "monospace"
+            }),
+            dcc.Store(id="log-store", data=[])
+        ]))
     ], className="my-3"),
-    
-
 ], fluid=True)
 
 # ---------------------------
@@ -127,35 +126,49 @@ app.layout = dbc.Container([
      Output("battery-gauge", "value"),
      Output("alert-maxlevel", "children"),
      Output("alert-rain", "children"),
-     Output("data-log", "children")],
+     Output("data-log", "children"),
+     Output("log-store", "data")],
     [Input("time-range", "value"),
      Input("sensor-selector", "value"),
-     Input("interval-update", "n_intervals")]
+     Input("interval-update", "n_intervals")],
+    State("log-store", "data")
 )
-def update_graph(range_value, sensor_id, n):
+def update_graph(range_value, sensor_id, n, logs):
     df = fetch_data(sensor_id)
     if df.empty:
         raise PreventUpdate
 
     df_filtered = filter_data(df, range_value)
+    if df_filtered.empty:
+        raise PreventUpdate
 
     fig = px.line(df_filtered, x="timestamp", y="depth", title="Water Depth Over Time")
     fig.update_traces(mode="lines+markers")
     fig.update_layout(xaxis_title="Time", yaxis_title="Depth (cm)")
 
-    max_depth = df_filtered["depth"].max()
-    min_depth = df_filtered["depth"].min()
-
-    latest_row = df_filtered.iloc[-1]
-
-    battery = latest_row["battery"] if pd.notna(latest_row["battery"]) else 0
-    maxlevel_alert = "⚠️ Lake above max level!" if latest_row.get("max_level") else ""
-    rain_alert = "🌧️ It’s currently raining at this point!" if latest_row.get("rain") else ""
     latest = df_filtered.iloc[-1]
-    log_entry = f"{latest['timestamp']} | Sensor {latest['sensor_id']} | Depth: {latest['depth']}cm | Battery: {latest.get('battery', '-'):.0f}% | Rain: {latest.get('rain', False)} | Max: {latest.get('max_level', False)}"
 
-    return fig, f"🔼 Max Depth: {max_depth} cm", f"🔽 Min Depth: {min_depth} cm", battery, maxlevel_alert, rain_alert, log_entry
+    battery = latest.get("battery", 0) or 0
+    maxlevel_alert = "⚠️ Lake above max level!" if latest.get("max_level") else ""
+    rain_alert = "🌧️ It’s currently raining at this point!" if latest.get("rain") else ""
 
+    # Log line
+    log_line = f"{latest['timestamp']} | Sensor {sensor_id} | Depth: {latest['depth']}cm | Battery: {battery:.0f}% | Rain: {latest.get('rain', False)} | Max: {latest.get('max_level', False)}"
+
+    if log_line not in logs:
+        logs.append(log_line)
+        logs = logs[-50:]  # Keep latest 50 logs max
+
+    return (
+        fig,
+        f"🔼 Max Depth: {df_filtered['depth'].max()} cm",
+        f"🔽 Min Depth: {df_filtered['depth'].min()} cm",
+        battery,
+        maxlevel_alert,
+        rain_alert,
+        html.Pre("\n".join(logs)),
+        logs
+    )
 
 @app.callback(
     Output("download", "data"),
